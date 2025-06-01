@@ -14,7 +14,7 @@ import os
 class CovidClassifierGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("🦠 COVID-19 Classifier - Análisis de Rayos X con IA")
+        self.root.title("🦠 COVID-19 Classifier BALANCEADO - Análisis de Rayos X")
         self.root.geometry("1200x800")
         self.root.configure(bg='#1e1e1e')
         self.root.resizable(True, True)
@@ -24,7 +24,7 @@ class CovidClassifierGUI:
         self.current_image_path = None
         self.processed_image = None
         
-        # Cargar modelo Smart Balanced
+        # Cargar modelo balanceado
         self.load_model()
         
         # Crear interfaz
@@ -34,15 +34,15 @@ class CovidClassifierGUI:
         self.configure_styles()
     
     def load_model(self):
-        """✅ CARGAR MODELO SMART BALANCED"""
+        """✅ CARGAR MODELO BALANCEADO"""
         try:
             # Buscar modelo en múltiples ubicaciones
             possible_paths = [
-                'results/covid_classifier_optimal_balanced.pkl',
-                '../results/covid_classifier_optimal_balanced.pkl',
-                'src/results/covid_classifier_optimal_balanced.pkl',
-                Path.cwd() / 'results' / 'covid_classifier_optimal_balanced.pkl',
-                Path.cwd().parent / 'results' / 'covid_classifier_optimal_balanced.pkl'
+                'results/covid_classifier_balanced.pkl',
+                '../results/covid_classifier_balanced.pkl',
+                'src/results/covid_classifier_balanced.pkl',
+                Path.cwd() / 'results' / 'covid_classifier_balanced.pkl',
+                Path.cwd().parent / 'results' / 'covid_classifier_balanced.pkl'
             ]
             
             model_path = None
@@ -55,24 +55,31 @@ class CovidClassifierGUI:
                 messagebox.showerror("Error", 
                     "No se encuentra el modelo entrenado.\n"
                     "Posibles ubicaciones buscadas:\n" + 
-                    "\n".join([str(p) for p in possible_paths[:5]]) +
-                    "\n\n¡Ejecuta primero el entrenamiento!\n"
-                    "python covid_classifier_smart_balanced.py")
+                    "\n".join([str(p) for p in possible_paths]) +
+                    "\n\nEjecuta primero: python covid_classifier_balanced.py")
                 return
             
-            # Importar la clase del modelo Smart Balanced
+            # Importar la clase del modelo balanceado
             sys.path.append('src')
             sys.path.append('.')
             
             try:
-                # Intentar importar el modelo
-                from src.covid_classifier import CovidClassifierSmartBalanced
-                self.model = CovidClassifierSmartBalanced.load_model(model_path)
-                print(f"✅ Modelo cargado desde: {model_path}")
+                # Intentar importar desde el nuevo archivo
+                from src.covid_classifier import CovidClassifierBalanced
+                self.model = CovidClassifierBalanced.load_model(model_path)
+                print(f"✅ Modelo BALANCEADO cargado desde: {model_path}")
                 
-            
-            except ImportError as e:
-                raise ImportError(f"No se pudo importar ningún modelo: {e}")
+            except ImportError:
+                # Fallback al modelo original si no existe el balanceado
+                try:
+                    from src.covid_classifier import CovidClassifierCV
+                    self.model = CovidClassifierCV.load_model(model_path)
+                    print(f"⚠️ Usando modelo original desde: {model_path}")
+                    messagebox.showwarning("Advertencia", 
+                        "Se cargó el modelo original. Para mejor rendimiento, "
+                        "entrena el modelo balanceado ejecutando covid_classifier_balanced.py")
+                except ImportError as e:
+                    raise ImportError(f"No se pudo importar ningún modelo: {e}")
             
         except Exception as e:
             messagebox.showerror("Error", f"Error cargando modelo: {e}")
@@ -122,14 +129,14 @@ class CovidClassifierGUI:
         title_frame.pack(fill=tk.X, pady=(0, 20))
         
         title_label = tk.Label(title_frame, 
-                              text="🦠 COVID-19 Classifier",
+                              text="🦠 COVID-19 Classifier BALANCEADO",
                               font=('Arial', 24, 'bold'),
                               fg='#4CAF50',
                               bg='#1e1e1e')
         title_label.pack()
         
         subtitle_label = tk.Label(title_frame,
-                                 text="🤖 Clasificación inteligente de radiografías con IA",
+                                 text="⚖️ Análisis Equilibrado de Radiografías • SIN SESGO hacia COVID",
                                  font=('Arial', 12),
                                  fg='#888888',
                                  bg='#1e1e1e')
@@ -164,11 +171,10 @@ class CovidClassifierGUI:
         
         # Label para mostrar imagen
         self.image_label = tk.Label(self.image_frame,
-                                   text="Selecciona una imagen de rayos X\npara comenzar el análisis\n\n🎯 Modelo Smart Balanced entrenado\ncon 21,696 imágenes",
+                                   text="Selecciona una imagen de rayos X\npara comenzar el análisis",
                                    font=('Arial', 12),
                                    fg='#888888',
-                                   bg='#2d2d2d',
-                                   justify=tk.CENTER)
+                                   bg='#2d2d2d')
         self.image_label.pack(expand=True)
         
         # Panel derecho - Resultados
@@ -177,7 +183,7 @@ class CovidClassifierGUI:
         
         # Título panel derecho
         results_title = tk.Label(right_panel,
-                                text="📊 Resultados del Análisis",
+                                text="📊 Resultados del Análisis BALANCEADO",
                                 font=('Arial', 16, 'bold'),
                                 fg='white',
                                 bg='#2d2d2d')
@@ -185,7 +191,7 @@ class CovidClassifierGUI:
         
         # Botón procesar
         self.process_btn = ttk.Button(right_panel,
-                                     text="🤖 Analizar con IA",
+                                     text="🔬 Analizar (Balanceado)",
                                      style='Process.TButton',
                                      command=self.process_image,
                                      state='disabled')
@@ -197,7 +203,7 @@ class CovidClassifierGUI:
         
         # Placeholder para resultados
         self.results_label = tk.Label(self.results_frame,
-                                     text="Sube una imagen y presiona\n'Analizar con IA'\n\n🤖 Clasificador inteligente\n🎯 Detección automática de patologías\n📊 Análisis preciso con IA",
+                                     text="Sube una imagen y presiona\n'Analizar (Balanceado)' para ver los resultados\n\n✅ Modelo sin sesgo hacia COVID",
                                      font=('Arial', 12),
                                      fg='#888888',
                                      bg='#2d2d2d',
@@ -233,7 +239,7 @@ class CovidClassifierGUI:
                 widget.destroy()
             
             self.results_label = tk.Label(self.results_frame,
-                                         text="Imagen cargada ✅\nPresiona 'Analizar con IA'\n\n🤖 Modelo entrenado con IA\n📊 Clasificación automática\n🎯 Detección de patologías",
+                                         text="Imagen cargada ✅\nPresiona 'Analizar (Balanceado)' para procesar\n\n⚖️ Análisis sin sesgo hacia COVID",
                                          font=('Arial', 12),
                                          fg='#4CAF50',
                                          bg='#2d2d2d',
@@ -293,11 +299,10 @@ class CovidClassifierGUI:
             
             # Información del modelo
             model_info = tk.Label(display_frame,
-                                 text="🤖 Modelo: IA COVID-19\n📊 Clasificador inteligente\n🎯 Detección automática",
+                                 text="🎯 Modelo: BALANCEADO (sin sesgo)",
                                  font=('Arial', 10, 'bold'),
                                  fg='#4CAF50',
-                                 bg='#2d2d2d',
-                                 justify=tk.CENTER)
+                                 bg='#2d2d2d')
             model_info.pack(pady=5)
             
         except Exception as e:
@@ -305,7 +310,7 @@ class CovidClassifierGUI:
             print(f"Error en display_image: {e}")
     
     def process_image(self):
-        """✅ PROCESAR IMAGEN CON MODELO SMART BALANCED"""
+        """✅ PROCESAR IMAGEN CON MODELO BALANCEADO"""
         if not self.current_image_path or not self.model:
             messagebox.showerror("Error", "No hay imagen cargada o modelo no disponible")
             return
@@ -316,21 +321,19 @@ class CovidClassifierGUI:
             self.progress.start()
             self.root.update()
             
-            print(f"\n🎯 PROCESANDO CON MODELO SMART BALANCED: {self.current_image_path}")
+            print(f"\n🔬 PROCESANDO CON MODELO BALANCEADO: {self.current_image_path}")
             
             # ✅ USAR DIRECTAMENTE EL MÉTODO PREDICT DEL MODELO
+            # Esto ya maneja todas las complejidades internamente
             if hasattr(self.model, 'predict'):
-                # Modelo Smart Balanced
+                # Modelo balanceado (nuevo)
                 result = self.model.predict(self.current_image_path)
                 
-                if result is None or len(result) < 2:
-                    raise ValueError("El modelo no pudo procesar la imagen")
-                
                 if len(result) == 3:
-                    # Formato completo: (class_name, confidence, all_probabilities)
+                    # Nuevo formato: (class_name, confidence, all_probabilities)
                     class_name, confidence, all_probabilities = result
                 else:
-                    # Formato simple: (class_name, confidence)
+                    # Formato anterior: (class_name, confidence)
                     class_name, confidence = result
                     all_probabilities = None
                 
@@ -345,7 +348,7 @@ class CovidClassifierGUI:
                 messagebox.showerror("Error", "No se pudo procesar la imagen")
                 return
             
-            print(f"🎯 RESULTADO SMART BALANCED: {class_name} ({confidence*100:.1f}%)")
+            print(f"🎯 RESULTADO BALANCEADO: {class_name} ({confidence*100:.1f}%)")
             
             # Mostrar resultados
             self.display_results(class_name, confidence, all_probabilities)
@@ -353,14 +356,13 @@ class CovidClassifierGUI:
         except Exception as e:
             self.progress.stop()
             self.progress.pack_forget()
-            error_msg = f"Error procesando imagen: {str(e)}"
-            messagebox.showerror("Error", error_msg)
+            messagebox.showerror("Error", f"Error procesando imagen: {e}")
             print(f"❌ Error completo: {e}")
             import traceback
             traceback.print_exc()
     
     def display_results(self, prediction, confidence, probabilities):
-        """✅ MOSTRAR RESULTADOS SMART BALANCED"""
+        """✅ MOSTRAR RESULTADOS BALANCEADOS"""
         # Limpiar frame de resultados
         for widget in self.results_frame.winfo_children():
             widget.destroy()
@@ -374,7 +376,7 @@ class CovidClassifierGUI:
         
         icons = {
             'COVID': '🦠',
-            'PNEUMONIA': '🫁', 
+            'PNEUMONIA': '🫁',
             'NORMAL': '✅'
         }
         
@@ -383,7 +385,7 @@ class CovidClassifierGUI:
         
         # Título del resultado
         result_title = tk.Label(self.results_frame,
-                               text=f"{icon} Análisis con IA Completado",
+                               text=f"{icon} Análisis BALANCEADO Completado",
                                font=('Arial', 16, 'bold'),
                                fg='white',
                                bg='#2d2d2d')
@@ -407,9 +409,9 @@ class CovidClassifierGUI:
                                    bg=color)
         confidence_label.pack(pady=(0, 15))
         
-        # ✅ INDICADOR DE MODELO IA
+        # ✅ INDICADOR DE MODELO BALANCEADO
         balanced_indicator = tk.Label(prediction_frame,
-                                     text="🤖 Clasificador con Inteligencia Artificial",
+                                     text="⚖️ Modelo Balanceado (Sin Sesgo)",
                                      font=('Arial', 10, 'bold'),
                                      fg='white',
                                      bg=color)
@@ -417,16 +419,16 @@ class CovidClassifierGUI:
         
         # Interpretación del resultado
         interpretations = {
-            'COVID': f"⚠️ Posible infección por COVID-19 detectada.\nConsulte con un profesional médico.\n\n🤖 Análisis realizado con IA\n🎯 Clasificación automática precisa",
-            'PNEUMONIA': f"⚠️ Signos de neumonía detectados.\nSe recomienda evaluación médica.\n\n🤖 Detectado por IA avanzada\n🎯 Diagnóstico asistido por computadora",
-            'NORMAL': f"✅ Radiografía aparenta normalidad.\nNo se detectan anomalías evidentes.\n\n🤖 Análisis con IA confirma normalidad\n🎯 Resultado confiable"
+            'COVID': "⚠️ Posible infección por COVID-19 detectada.\nConsulte con un profesional médico.\n\n🔍 Análisis realizado sin sesgo hacia COVID",
+            'PNEUMONIA': "⚠️ Signos de neumonía detectados.\nSe recomienda evaluación médica.\n\n🔍 Diagnóstico equilibrado y confiable",
+            'NORMAL': "✅ Radiografía aparenta normalidad.\nNo se detectan anomalías evidentes.\n\n🔍 Resultado de análisis balanceado"
         }
         
-        interpretation = interpretations.get(prediction, "Resultado del análisis Smart Balanced.")
+        interpretation = interpretations.get(prediction, "Resultado del análisis balanceado.")
         
         interp_label = tk.Label(self.results_frame,
                                text=interpretation,
-                               font=('Arial', 11),
+                               font=('Arial', 12),
                                fg='white',
                                bg='#2d2d2d',
                                justify=tk.CENTER,
@@ -448,12 +450,12 @@ class CovidClassifierGUI:
         if probabilities is not None:
             self.display_probabilities(probabilities)
         
-        # Disclaimer médico con estadísticas del modelo
+        # Disclaimer médico
         disclaimer = tk.Label(self.results_frame,
-                             text="⚠️ IMPORTANTE: Sistema de apoyo diagnóstico Smart Balanced.\n"
+                             text="⚠️ IMPORTANTE: Este es un sistema de apoyo diagnóstico BALANCEADO.\n"
                                   "No reemplaza el criterio médico profesional.\n"
-                                  "Consulte siempre con un radiólogo especialista.\n\n"
-                                  "📊 Modelo: 77.6% accuracy general • 21,696 imágenes • Balance perfecto",
+                                  "Consulte siempre con un radiólogo o médico especialista.\n\n"
+                                  "✅ Modelo entrenado sin sesgo hacia ninguna clase.",
                              font=('Arial', 10, 'italic'),
                              fg='#FFA726',
                              bg='#2d2d2d',
@@ -462,31 +464,26 @@ class CovidClassifierGUI:
         disclaimer.pack(pady=20)
     
     def analyze_confidence(self, confidence, prediction):
-        """✅ ANÁLISIS DE CONFIANZA CONTEXTUALIZADO"""
+        """✅ ANÁLISIS DE CONFIANZA MEJORADO"""
         if confidence > 0.8:
-            return f"🎯 Confianza MUY ALTA ({confidence*100:.1f}%)\nEl modelo Smart Balanced está muy seguro del diagnóstico."
+            return f"🎯 Confianza MUY ALTA ({confidence*100:.1f}%)\nEl modelo está muy seguro del diagnóstico."
         elif confidence > 0.6:
-            return f"✅ Confianza ALTA ({confidence*100:.1f}%)\nResultado confiable con modelo entrenado en 21K+ imágenes."
+            return f"✅ Confianza ALTA ({confidence*100:.1f}%)\nResultado confiable para {prediction}."
         elif confidence > 0.4:
-            return f"⚠️ Confianza MEDIA ({confidence*100:.1f}%)\nSe recomienda análisis adicional o segunda opinión."
+            return f"⚠️ Confianza MEDIA ({confidence*100:.1f}%)\nSe recomienda análisis adicional."
         else:
-            return f"❌ Confianza BAJA ({confidence*100:.1f}%)\nImagen compleja. Verificar calidad o consultar especialista."
+            return f"❌ Confianza BAJA ({confidence*100:.1f}%)\nImagen difícil de clasificar. Revisar calidad."
     
     def display_probabilities(self, probabilities):
-        """✅ MOSTRAR PROBABILIDADES DETALLADAS CON CONTEXTO"""
+        """✅ MOSTRAR PROBABILIDADES DETALLADAS"""
         prob_title = tk.Label(self.results_frame,
-                             text="📊 Probabilidades Smart Balanced",
+                             text="📊 Probabilidades Detalladas (Balanceadas)",
                              font=('Arial', 14, 'bold'),
                              fg='white',
                              bg='#2d2d2d')
         prob_title.pack(pady=(20, 10))
         
-        # Obtener clases del modelo
-        if hasattr(self.model, 'label_encoder') and hasattr(self.model.label_encoder, 'classes_'):
-            classes = self.model.label_encoder.classes_
-        else:
-            classes = ['COVID', 'NORMAL', 'PNEUMONIA']  # Fallback
-        
+        classes = self.model.label_encoder.classes_
         icons = {'COVID': '🦠', 'PNEUMONIA': '🫁', 'NORMAL': '✅'}
         colors = {'COVID': '#FF5722', 'PNEUMONIA': '#FF9800', 'NORMAL': '#4CAF50'}
         
@@ -520,19 +517,19 @@ class CovidClassifierGUI:
                                       bg='#3d3d3d')
             prob_percentage.pack(side=tk.RIGHT, padx=5, pady=5)
         
-        # ✅ ANÁLISIS DE DISTRIBUCIÓN CONTEXTUALIZADO
+        # ✅ ANÁLISIS DE DISTRIBUCIÓN
         max_prob = max(probabilities)
         min_prob = min(probabilities)
         prob_range = max_prob - min_prob
         
         if prob_range < 0.3:
-            balance_text = "⚖️ Probabilidades MUY EQUILIBRADAS\nDiagnóstico incierto - requiere análisis médico adicional"
+            balance_text = "⚖️ Probabilidades MUY EQUILIBRADAS\nDiagnóstico incierto - requiere análisis adicional"
             balance_color = '#FFA726'
         elif prob_range < 0.5:
-            balance_text = "⚖️ Probabilidades MODERADAMENTE equilibradas\nResultado aceptable del modelo Smart Balanced"
+            balance_text = "⚖️ Probabilidades MODERADAMENTE equilibradas\nResultado aceptable pero con cierta incertidumbre"
             balance_color = '#FFD54F'
         else:
-            balance_text = "✅ Diagnóstico CLARO del Smart Balanced\nUna clase domina claramente (confianza alta)"
+            balance_text = "✅ Diagnóstico CLARO\nUna clase domina claramente sobre las otras"
             balance_color = '#4CAF50'
         
         balance_label = tk.Label(self.results_frame,
@@ -551,18 +548,14 @@ class CovidClassifierGUI:
 def main():
     """✅ FUNCIÓN PRINCIPAL MEJORADA"""
     try:
-        print("🚀 Iniciando COVID-19 Classifier GUI SMART BALANCED...")
-        print("🎯 Buscando modelo entrenado con 21,696 imágenes...")
-        
+        print("🚀 Iniciando COVID-19 Classifier GUI BALANCEADO...")
         app = CovidClassifierGUI()
         
         if app.model is None:
             print("❌ No se pudo cargar el modelo. Cerrando aplicación.")
-            print("💡 Ejecuta primero: python covid_classifier_smart_balanced.py")
             return
         
-        print("✅ GUI iniciada correctamente con modelo Smart Balanced")
-        print("📊 Modelo cargado: 77.6% accuracy • Balance perfecto")
+        print("✅ GUI iniciada correctamente con modelo balanceado")
         app.run()
         
     except Exception as e:
@@ -577,10 +570,9 @@ def main():
             messagebox.showerror("Error Fatal", 
                 f"Error iniciando la aplicación:\n\n{e}\n\n"
                 "Verifica que:\n"
-                "1. Tengas el modelo Smart Balanced entrenado\n"
+                "1. Tengas el modelo entrenado (covid_classifier_balanced.pkl)\n"
                 "2. Las dependencias estén instaladas\n"
-                "3. Los archivos estén en la ubicación correcta\n\n"
-                "Para entrenar: python covid_classifier_smart_balanced.py")
+                "3. Los archivos de código estén en la ubicación correcta")
         except:
             pass
 
