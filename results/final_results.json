@@ -1,7 +1,0 @@
-{
-  "accuracy": 0.8374675171273328,
-  "timestamp": "2025-05-31T18:35:10.436237",
-  "model_params": 1546419,
-  "dataset_size": 21165,
-  "criteria_met": {
-    "accuracy_85_percent": 
